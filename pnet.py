@@ -34,7 +34,36 @@ class PrototypicalNetwork(nn.Module):
 
         # TODO: imeplement this function
 
+        # Compute centroids
+        c = self.num_ways*[[]]
+        # print(x_supp.type)
+        for k in range(self.num_ways):
+            Sk = []
+            for i in range(len(x_supp)):
+                if (y_supp[i] == k):
+                    Sk.append(x_supp[i])
+            Sk = torch.stack(Sk)
+            preds = self.network(Sk)
+            c[k] = sum(preds)/len(preds)
+
+        # Pairwise similarity & Prediction
+        query_embeded = self.network(x_query)
+        query_preds = len(x_query)*[self.num_ways*[0]]
+        for i in range(len(x_query)):
+            x = query_embeded[i]
+            for n in range(self.num_ways):
+                euclidean_dist = ((c[n]-x)**2).sqrt()
+                pairwise = -euclidean_dist.sqrt()
+                query_preds[i][n] = pairwise[n]
+            query_preds[i] = torch.stack(query_preds[i])
+        query_preds = torch.stack(query_preds)
+
+        # Loss
+        query_loss = self.criterion(query_preds, y_query)
+        
         if training:
             query_loss.backward() # do not remove this if statement, otherwise it won't train
 
-        raise NotImplementedError()
+        return query_preds, query_loss
+
+        # raise NotImplementedError()
