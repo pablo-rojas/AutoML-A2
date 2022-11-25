@@ -36,25 +36,15 @@ class MAML(nn.Module):
           - query_loss (torch.Tensor): the cross-entropy loss on the query inputs
         """
         
-        # TODO: implement this function
-
-        # Note: to make predictions and to allow for second-order gradients to flow if we want,
-        # we use a custom forward function for our network. You can make predictions using
-        # preds = self.network(input_data, weights=<the weights you want to use>)
-
-        fast_weights = []
-        for param in self.network.parameters():
-            fast_weights.append(param.clone())
+        fast_weights = [p.clone() for p in self.network.parameters()]
 
         for k in range (self.num_updates):
             preds = self.network(x_supp, weights=fast_weights)
             loss = self.inner_loss(preds, y_supp)
-            grad = torch.autograd.grad(loss, fast_weights, create_graph=True)
+            grad = torch.autograd.grad(loss, fast_weights, create_graph=self.second_order)
             fast_weights = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(grad, fast_weights)))
         
-
-
-        query_preds = self.network(x_query, fast_weights)
+        query_preds = self.network(x_query, weights=fast_weights)
         query_loss = self.inner_loss(query_preds, y_query)
 
         if training:
