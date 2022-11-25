@@ -125,7 +125,7 @@ if args.algorithm == "maml":
 else:
     constr = PrototypicalNetwork
 
-model = constr(num_ways=args.num_ways,T=args.T, input_size=args.img_size**2, rgb=args.rgb, img_size=args.img_size) # images are of size 28x28
+model = constr(num_ways=args.num_ways,T=args.T, input_size=args.img_size**2, rgb=args.rgb, img_size=args.img_size, second_order=args.second_order) # images are of size 28x28
 model = model.to(args.dev)
 loss_fn = nn.CrossEntropyLoss()
 opt = torch.optim.Adam(model.parameters(), lr=args.lr/args.meta_batch_size)
